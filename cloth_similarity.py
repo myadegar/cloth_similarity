@@ -14,8 +14,8 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
 
-from cloth_segmentation.infer import load_segment_model, cloth_segment
-# from rembg import remove, new_session
+# from cloth_segmentation.infer import load_segment_model, cloth_segment
+from rembg import remove, new_session
 
 from deep_person_reid.torchreid.utils import FeatureExtractor
 from deep_person_reid.torchreid import metrics
@@ -32,8 +32,8 @@ class ClothSimilarity():
 
         # segmentation model
         checkpoint_path = r'./cloth_segmentation/checkpoint/cloth_segm_u2net_latest.pth'
-        self.segment_model = load_segment_model(checkpoint_path, self.device)
-        # self.session = new_session(model_name="u2net_cloth_seg")
+        # self.segment_model = load_segment_model(checkpoint_path, self.device)
+        self.session = new_session(model_name="u2net_cloth_seg")
 
         # feature extractor model for similarity calculation
         if similarity_method.lower() == 'vae':  # vae model
@@ -64,10 +64,12 @@ class ClothSimilarity():
             file_name, ext = os.path.splitext(image_file)
             input_image = Image.open(image_path).convert('RGB')
             torch.cuda.empty_cache()
-            segment_images, mask_images = cloth_segment(input_image=input_image, net=self.segment_model,
-                                                        device=self.device,
-                                                        alpha_matting=False, post_process_mask=True, concat_parts=False,
-                                                        max_img_size=max_img_size)
+            segment_images, mask_images = remove(input_image, session=self.session, alpha_matting=True,
+                                  post_process_mask=True, only_mask=False, concat_parts=False)
+            # segment_images, mask_images = cloth_segment(input_image=input_image, net=self.segment_model,
+            #                                             device=self.device,
+            #                                             alpha_matting=False, post_process_mask=True, concat_parts=False,
+            #                                             max_img_size=max_img_size)
             ##
             segment_img = {}
             mask_img = {}
